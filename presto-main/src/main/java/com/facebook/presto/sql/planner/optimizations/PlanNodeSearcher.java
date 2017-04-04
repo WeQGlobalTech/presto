@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.facebook.presto.sql.planner.optimizations;
 
 import com.facebook.presto.sql.planner.plan.PlanNode;
@@ -184,5 +183,15 @@ public class PlanNodeSearcher
         else {
             throw new IllegalArgumentException("Unable to replace first node when a node has multiple children, use replaceAll instead");
         }
+    }
+
+    public boolean matches()
+    {
+        return findFirst().isPresent();
+    }
+
+    public int count()
+    {
+        return findAll().size();
     }
 }

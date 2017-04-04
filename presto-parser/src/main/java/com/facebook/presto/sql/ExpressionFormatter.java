@@ -21,6 +21,7 @@ import com.facebook.presto.sql.tree.AstVisitor;
 import com.facebook.presto.sql.tree.AtTimeZone;
 import com.facebook.presto.sql.tree.BetweenPredicate;
 import com.facebook.presto.sql.tree.BinaryLiteral;
+import com.facebook.presto.sql.tree.BindExpression;
 import com.facebook.presto.sql.tree.BooleanLiteral;
 import com.facebook.presto.sql.tree.Cast;
 import com.facebook.presto.sql.tree.CharLiteral;
@@ -56,6 +57,7 @@ import com.facebook.presto.sql.tree.Node;
 import com.facebook.presto.sql.tree.NotExpression;
 import com.facebook.presto.sql.tree.NullIfExpression;
 import com.facebook.presto.sql.tree.NullLiteral;
+import com.facebook.presto.sql.tree.OrderBy;
 import com.facebook.presto.sql.tree.Parameter;
 import com.facebook.presto.sql.tree.QualifiedName;
 import com.facebook.presto.sql.tree.QuantifiedComparisonExpression;
@@ -362,6 +364,14 @@ public final class ExpressionFormatter
         }
 
         @Override
+        protected String visitBindExpression(BindExpression node, Void context)
+        {
+            return "\"$INTERNAL$BIND\"(" +
+                    process(node.getValue(), context) + ", " +
+                    process(node.getFunction(), context) + ")";
+        }
+
+        @Override
         protected String visitLogicalBinaryExpression(LogicalBinaryExpression node, Void context)
         {
             return formatBinaryExpression(node.getType().toString(), node.getLeft(), node.getRight());
@@ -560,8 +570,8 @@ public final class ExpressionFormatter
             if (!node.getPartitionBy().isEmpty()) {
                 parts.add("PARTITION BY " + joinExpressions(node.getPartitionBy()));
             }
-            if (!node.getOrderBy().isEmpty()) {
-                parts.add("ORDER BY " + formatSortItems(node.getOrderBy(), parameters));
+            if (node.getOrderBy().isPresent()) {
+                parts.add(formatOrderBy(node.getOrderBy().get(), parameters));
             }
             if (node.getFrame().isPresent()) {
                 parts.add(process(node.getFrame().get(), context));
@@ -644,6 +654,11 @@ public final class ExpressionFormatter
     static String formatStringLiteral(String s)
     {
         return "'" + s.replace("'", "''") + "'";
+    }
+
+    static String formatOrderBy(OrderBy orderBy, Optional<List<Expression>> parameters)
+    {
+        return "ORDER BY " + formatSortItems(orderBy.getSortItems(), parameters);
     }
 
     static String formatSortItems(List<SortItem> sortItems, Optional<List<Expression>> parameters)
