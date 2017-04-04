@@ -154,7 +154,6 @@ public class PrestoServer
         String property = nullToEmpty(announcement.getProperties().get("connectorIds"));
         List<String> values = Splitter.on(',').trimResults().omitEmptyStrings().splitToList(property);
         Set<String> connectorIds = new LinkedHashSet<>(values);
-
         // automatically build connectorIds if not configured
         if (connectorIds.isEmpty()) {
             List<Catalog> catalogs = metadata.getCatalogs();
